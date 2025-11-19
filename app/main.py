@@ -24,8 +24,61 @@ if page == "Home":
 
 # ----- PLACEHOLDER FOR OUIAM -----
 elif page == "Single Asset (Ouiam)":
-    st.subheader("Single Asset Analysis – To be implemented by Ouiam")
-    st.info("This page will display strategies and metrics for one asset (BTC-USD).")
+    st.subheader("Single Asset Crypto Analysis")
+
+    # 1) Choose asset and time window
+    asset = st.selectbox(
+        "Select crypto asset:",
+        options=["BTC-USD", "ETH-USD"],
+        index=0
+    )
+
+    days = st.slider(
+        "Time window (days):",
+        min_value=30,
+        max_value=365,
+        value=180,
+        step=10
+    )
+
+    # 2) Load historical prices
+    prices = get_price_history(asset, days=days)
+
+    if prices.empty:
+        st.warning("No data available for this asset and time window.")
+    else:
+        st.subheader(f"Daily close price – {asset}")
+        st.line_chart(prices["price"])
+
+        # 3) Compute daily returns
+        returns = prices["price"].pct_change().dropna()
+
+        st.subheader("Performance metrics")
+
+        trading_days_per_year = 252
+
+        avg_daily_ret = float(returns.mean())
+        daily_vol = float(returns.std())
+
+        annualized_return = (1 + avg_daily_ret) ** trading_days_per_year - 1
+        annualized_vol = daily_vol * np.sqrt(trading_days_per_year)
+
+        if annualized_vol > 0:
+            sharpe_ratio = annualized_return / annualized_vol
+        else:
+            sharpe_ratio = np.nan
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric("Average daily return", f"{avg_daily_ret:.4%}")
+            st.metric("Daily volatility", f"{daily_vol:.4%}")
+            st.metric("Annualized return", f"{annualized_return:.2%}")
+
+        with col2:
+            st.metric("Annualized volatility", f"{annualized_vol:.2%}")
+            st.metric("Sharpe ratio (annualized)", f"{sharpe_ratio:.2f}")
+            st.metric("Time window (days)", days)
 
 # ----- YOUR PAGE: PORTFOLIO -----
 elif page == "Portfolio (Erian)":
