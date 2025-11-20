@@ -125,12 +125,86 @@ page = st.sidebar.radio(
 # ---------------------------------------------------------------------
 
 if page == "Home":
-    st.subheader("Welcome 👋")
-    st.write("""
-        This dashboard is part of the *Python, Linux and Git* course at ESILV.
-        It provides single-asset and multi-asset crypto analytics, performance metrics,
-        correlations, and risk analysis for portfolio construction.
-    """)
+
+    st.markdown("""
+        <h1 style='text-align:center; font-size:48px; font-weight:700; color:white;'>
+            Crypto Quant Dashboard
+        </h1>
+
+        <h3 style='text-align:center; margin-top:-10px; color:#4CAF50;'>
+            A4 IF — Python • Linux • Git • Quantitative Finance
+        </h3>
+
+        <div class="divider"></div>
+
+        <p style='text-align:center; font-size:18px; color:#CCCCCC; max-width:900px; margin:auto;'>
+            This dashboard provides advanced cryptocurrency analytics including single-asset analysis,
+            multi-asset portfolio construction, performance evaluation, correlation analysis,
+            and automated reporting. It was developed as part of the A4 IF course at ESILV.
+        </p>
+
+        <br><br>
+
+        <h3 style='text-align:center; color:white;'>Team Members</h3>
+
+        <div style='display:flex; justify-content:center; gap:40px; margin-top:20px;'>
+
+            <div class="metric-card" style="width:350px; border-left:6px solid #4CAF50;">
+                <h3 style='color:white; text-align:center;'>Erian STANLEY YOGARAJ</h3>
+                <p style='color:#AAAAAA; text-align:center;'>
+                    Developer — Portfolio Analysis (Quant B)<br>
+                    Multi-asset modeling, risk metrics, correlations,<br>
+                    automation through Linux and cron.
+                </p>
+            </div>
+
+            <div class="metric-card" style="width:350px; border-left:6px solid #2196F3;">
+                <h3 style='color:white; text-align:center;'>Ouiam BOUSSAID BENCHAARA</h3>
+                <p style='color:#AAAAAA; text-align:center;'>
+                    Developer — Single Asset Analysis (Quant A)<br>
+                    Technical indicators, BTC analytics,<br>
+                    performance computation and strategies.
+                </p>
+            </div>
+
+        </div>
+
+        <br><br>
+
+        <h3 style='color:white; text-align:center;'>Project Overview</h3>
+
+        <div style='display:flex; justify-content:center; gap:40px; margin-top:20px;'>
+
+            <div class="metric-card" style="width:350px; border-left:6px solid #4CAF50;">
+                <h3 style='color:white;'>Quant A — Single Asset</h3>
+                <p style='color:#AAAAAA;'>
+                    • BTC-USD analysis<br>
+                    • Technical indicators (MAs)<br>
+                    • Volatility & Sharpe ratio<br>
+                    • Performance metrics
+                </p>
+            </div>
+
+            <div class="metric-card" style="width:350px; border-left:6px solid #2196F3;">
+                <h3 style='color:white;'>Quant B — Portfolio</h3>
+                <p style='color:#AAAAAA;'>
+                    • Multi-asset portfolio (BTC, ETH, BNB, SOL)<br>
+                    • Risk & diversification<br>
+                    • Correlation matrix<br>
+                    • Drawdown & Sharpe ratio
+                </p>
+            </div>
+
+        </div>
+
+        <br><br>
+
+        <p style='text-align:center; color:#777777; font-size:15px;'>
+            Developed for the ESILV A4 IF Python, Linux & Git module — 2024/2025
+        </p>
+
+    """, unsafe_allow_html=True)
+
 
 
 # ---------------------------------------------------------------------
