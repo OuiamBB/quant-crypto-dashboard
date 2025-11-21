@@ -13,13 +13,25 @@ st.set_page_config(page_title="Crypto Quant Dashboard", layout="wide")
 st.markdown("""
     <style>
 
-    body { background-color: #0E1117; }
+    /* GLOBAL BACKGROUND */
+    body {
+        background-color: #0E1117;
+    }
 
+    /* SIDEBAR */
     [data-testid="stSidebar"] {
         background-color: #11141c;
         padding-top: 40px;
     }
 
+    /* SIDEBAR TITLE */
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3 {
+        color: white;
+    }
+
+    /* TITLES */
     h1 {
         text-align: center !important;
         color: white !important;
@@ -28,14 +40,18 @@ st.markdown("""
         font-weight: 700;
     }
 
-    h2, h3, h4 { color: white !important; }
+    h2, h3, h4 {
+        color: white !important;
+    }
 
+    /* DIVIDER */
     .divider {
         border-top: 1px solid #4CAF50;
         margin-top: 10px;
         margin-bottom: 20px;
     }
 
+    /* CARDS */
     .metric-card {
         padding: 20px;
         background-color: #1E1F26;
@@ -44,7 +60,11 @@ st.markdown("""
         margin-bottom: 15px;
     }
 
-    .metric-title { font-size: 16px; font-weight: 600; color: white; }
+    .metric-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+    }
 
     .metric-value {
         font-size: 30px;
@@ -57,6 +77,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+# Function to create cards
 def metric_card(title, value, color="#4CAF50"):
     st.markdown(
         f"""
@@ -64,10 +85,12 @@ def metric_card(title, value, color="#4CAF50"):
             <div class="metric-title">{title}</div>
             <div class="metric-value" style="color:{color};">{value}</div>
         </div>
-        """, unsafe_allow_html=True
+        """,
+        unsafe_allow_html=True
     )
 
 
+# Max drawdown helper
 def max_drawdown(series):
     cummax = series.cummax()
     drawdown = (series - cummax) / cummax
@@ -75,26 +98,34 @@ def max_drawdown(series):
 
 
 # ---------------------------------------------------------------------
-# HEADER
+#                             HEADER
 # ---------------------------------------------------------------------
 
-st.markdown("<h1>Crypto Quant Dashboard</h1><div class='divider'></div>", unsafe_allow_html=True)
+st.markdown("""
+    <h1>Crypto Quant Dashboard</h1>
+    <div class="divider"></div>
+""", unsafe_allow_html=True)
+
 st.caption("A4 IF — Python, Linux & Git project")
 
 
 # ---------------------------------------------------------------------
-# SIDEBAR
+#                             SIDEBAR
 # ---------------------------------------------------------------------
 
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to:", ["Home", "Single Asset (Ouiam)", "Portfolio (Erian)"])
+page = st.sidebar.radio(
+    "Go to:",
+    ["Home", "Single Asset (Ouiam)", "Portfolio (Erian)"]
+)
 
 
 # ---------------------------------------------------------------------
-# HOME PAGE
+#                             HOME PAGE
 # ---------------------------------------------------------------------
 
 if page == "Home":
+
     st.markdown("""
         <h1 style='text-align:center; font-size:48px; font-weight:700; color:white;'>
             Crypto Quant Dashboard
@@ -110,22 +141,89 @@ if page == "Home":
                   max-width:900px; margin:auto;'>
             This dashboard provides advanced cryptocurrency analytics including 
             single-asset analysis, multi-asset portfolio construction, 
-            performance evaluation, correlation analysis and automated reporting.
+            performance evaluation, correlation analysis and automated reporting. 
+            It was developed as part of the A4 IF course at ESILV.
         </p>
+
+        <br><br>
+
+        <h3 style='text-align:center; color:white;'>Team Members</h3>
+
+        <div style='display:flex; justify-content:center; gap:40px; margin-top:20px;'>
+
+            <div class="metric-card" style="width:350px; border-left:6px solid #4CAF50;">
+                <h3 style='color:white; text-align:center;'>Erian STANLEY YOGARAJ</h3>
+                <p style='color:#AAAAAA; text-align:center;'>
+                    Developer — Portfolio Analysis (Quant B)<br>
+                    Multi-asset modeling, risk metrics,<br>
+                    correlations and Linux automation.
+                </p>
+            </div>
+
+            <div class="metric-card" style="width:350px; border-left:6px solid #2196F3;">
+                <h3 style='color:white; text-align:center;'>Ouiam BOUSSAID BENCHAARA</h3>
+                <p style='color:#AAAAAA; text-align:center;'>
+                    Developer — Single Asset Analysis (Quant A)<br>
+                    Technical indicators, BTC analytics,<br>
+                    performance computation and strategies.
+                </p>
+            </div>
+
+        </div>
+
+        <br><br>
+
+        <h3 style='color:white; text-align:center;'>Project Overview</h3>
+
+        <div style='display:flex; justify-content:center; gap:40px; margin-top:20px;'>
+
+            <div class="metric-card" style="width:350px; border-left:6px solid #4CAF50;">
+                <h3 style='color:white;'>Quant A — Single Asset</h3>
+                <p style='color:#AAAAAA;'>
+                    • BTC-USD analysis<br>
+                    • Technical indicators (MAs)<br>
+                    • Volatility & Sharpe ratio<br>
+                    • Performance metrics
+                </p>
+            </div>
+
+            <div class="metric-card" style="width:350px; border-left:6px solid #2196F3;">
+                <h3 style='color:white;'>Quant B — Portfolio</h3>
+                <p style='color:#AAAAAA;'>
+                    • Multi-asset portfolio (BTC, ETH, BNB, SOL)<br>
+                    • Risk & diversification<br>
+                    • Correlation matrix<br>
+                    • Drawdown & Sharpe ratio
+                </p>
+            </div>
+
+        </div>
+
+        <br><br>
+
+        <p style='text-align:center; color:#777777; font-size:15px;'>
+            Developed by Erian & Ouiam — ESILV A4 IF — 2024/2025
+        </p>
+
     """, unsafe_allow_html=True)
 
 
+
+
 # ---------------------------------------------------------------------
-# SINGLE ASSET (OUIAM)
+#                       SINGLE ASSET (OUIAM)
 # ---------------------------------------------------------------------
 
 elif page == "Single Asset (Ouiam)":
-
     st.subheader("Single Asset Crypto Analysis")
 
-    asset = st.selectbox("Select crypto asset:", ["BTC-USD", "ETH-USD"])
+    # --- Inputs ---
+    asset = st.selectbox("Select crypto asset:", ["BTC-USD", "ETH-USD"], index=0)
 
-    days = st.slider("Time window (days):", 30, 365, 180, step=10)
+    days = st.slider(
+        "Time window (days):",
+        min_value=30, max_value=365, value=180, step=10
+    )
 
     strategy = st.selectbox(
         "Select strategy:",
@@ -134,61 +232,50 @@ elif page == "Single Asset (Ouiam)":
 
     st.write(" ")
 
-    # STRATEGY PARAMETERS
+    # Strategy parameters
     if strategy == "SMA Crossover":
-        sma_short = st.number_input("Short SMA window", 5, 100, 20)
-        sma_long = st.number_input("Long SMA window", 20, 300, 100)
+        sma_short = st.number_input("Short SMA window", min_value=5, max_value=100, value=20)
+        sma_long = st.number_input("Long SMA window", min_value=20, max_value=300, value=100)
 
     elif strategy == "RSI Strategy":
-        rsi_window = st.number_input("RSI window", 5, 50, 14)
-        rsi_buy = st.number_input("RSI Buy Threshold", 5, 50, 30)
-        rsi_sell = st.number_input("RSI Sell Threshold", 50, 95, 70)
+        rsi_window = st.number_input("RSI window", min_value=5, max_value=50, value=14)
+        rsi_buy = st.number_input("RSI Buy Threshold", min_value=5, max_value=50, value=30)
+        rsi_sell = st.number_input("RSI Sell Threshold", min_value=50, max_value=95, value=70)
 
-    prices = get_price_history(asset, days)
+    # --- Load data ---
+    prices = get_price_history(asset, days=days)
 
     if prices.empty:
-        st.warning("No data available.")
+        st.warning("No data available for this asset.")
         st.stop()
 
     prices["returns"] = prices["price"].pct_change()
 
+    # ------------------------------
+    # 🔥 Strategy Implementations
+    # ------------------------------
+
     # BUY & HOLD
     bh_curve = (1 + prices["returns"].fillna(0)).cumprod()
 
-
-    # --------------------------------------------------------
-    # SMA CROSSOVER STRATEGY
-    # --------------------------------------------------------
+    # SMA CROSSOVER
     if strategy == "SMA Crossover":
         df = prices.copy()
-
         df["SMA_short"] = df["price"].rolling(sma_short).mean()
         df["SMA_long"] = df["price"].rolling(sma_long).mean()
 
+        df["signal"] = 0
         df["signal"] = (df["SMA_short"] > df["SMA_long"]).astype(int)
         df["position"] = df["signal"].shift(1).fillna(0)
 
         df["strategy_returns"] = df["position"] * df["returns"]
         strat_curve = (1 + df["strategy_returns"].fillna(0)).cumprod()
 
-        # 🔵 OVERLAY GRAPH (Price + SMA)
-        st.subheader("SMA Overlay — Price + SMA Short + SMA Long")
-
-        overlay = pd.DataFrame({
-            "Price": df["price"],
-            f"SMA {sma_short}": df["SMA_short"],
-            f"SMA {sma_long}": df["SMA_long"]
-        })
-
-        st.line_chart(overlay)
-
-    # --------------------------------------------------------
     # RSI STRATEGY
-    # --------------------------------------------------------
     elif strategy == "RSI Strategy":
         df = prices.copy()
-
         delta = df["price"].diff()
+
         gain = delta.clip(lower=0)
         loss = -delta.clip(upper=0)
 
@@ -199,34 +286,40 @@ elif page == "Single Asset (Ouiam)":
         df["RSI"] = 100 - (100 / (1 + rs))
 
         df["position"] = 0
-        df.loc[df["RSI"] < rsi_buy, "position"] = 1
-        df.loc[df["RSI"] > rsi_sell, "position"] = 0
+        df.loc[df["RSI"] < rsi_buy, "position"] = 1      # BUY
+        df.loc[df["RSI"] > rsi_sell, "position"] = 0     # SELL
         df["position"] = df["position"].ffill().fillna(0)
 
         df["strategy_returns"] = df["position"] * df["returns"]
         strat_curve = (1 + df["strategy_returns"].fillna(0)).cumprod()
 
-        # 🔵 RSI GRAPH
-        st.subheader("RSI Indicator")
-
-        st.line_chart(df[["RSI"]])
-
-        st.markdown(f"**RSI BUY < {rsi_buy}** — **RSI SELL > {rsi_sell}**")
-
     else:
-        strat_curve = bh_curve
+        strat_curve = bh_curve  # Buy & Hold by default
 
+    # ------------------------------
+    # 📉 Max Drawdown Function
+    # ------------------------------
+    def max_drawdown(series):
+        rolling_max = series.cummax()
+        drawdown = (series - rolling_max) / rolling_max
+        return drawdown.min()
 
-    # --------------------------------------------------------
-    # PRICE VS STRATEGY
-    # --------------------------------------------------------
+    mdd = max_drawdown(strat_curve)
+
+    # ------------------------------
+    # 📊 DISPLAY CHART
+    # ------------------------------
     st.subheader(f"Price vs Strategy — {asset}")
-    st.line_chart({"Price": prices["price"], "Strategy value": strat_curve})
+    st.line_chart(
+        {
+            "Price": prices["price"],
+            "Strategy value": strat_curve
+        }
+    )
 
-
-    # --------------------------------------------------------
-    # PERFORMANCE METRICS
-    # --------------------------------------------------------
+    # ------------------------------
+    # 📈 Performance Metrics
+    # ------------------------------
     st.subheader("Performance Metrics")
 
     trading_days = 252
@@ -237,7 +330,6 @@ elif page == "Single Asset (Ouiam)":
     annual_vol = vol_daily * np.sqrt(trading_days)
 
     sharpe = annual_ret / annual_vol if annual_vol > 0 else np.nan
-    mdd = max_drawdown(strat_curve)
 
     col1, col2 = st.columns(2)
 
@@ -249,14 +341,6 @@ elif page == "Single Asset (Ouiam)":
         st.metric("Sharpe Ratio", f"{sharpe:.2f}")
         st.metric("Max Drawdown", f"{mdd:.2%}")
 
-
-# ---------------------------------------------------------------------
-# PORTFOLIO (ERIAN) — UNMODIFIED
-# ---------------------------------------------------------------------
-
-elif page == "Portfolio (Erian)":
-    # (Ton code portfolio est ici, inchangé)
-    pass
 
 
 # ---------------------------------------------------------------------
