@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from data_fetch import get_price_history, get_multi_price_history
 import time
+from sklearn.linear_model import LinearRegression
 
 # ---------------------------------------------------------------------
 #                      STYLING (LEVEL 3 - MAX)
@@ -108,12 +109,7 @@ def max_drawdown(series):
 #                             HEADER
 # ---------------------------------------------------------------------
 
-st.markdown("""
-    <h1>Crypto Quant Dashboard</h1>
-    <div class="divider"></div>
-""", unsafe_allow_html=True)
 
-st.caption("A4 IF — Python, Linux & Git project")
 
 
 # ---------------------------------------------------------------------
@@ -128,91 +124,108 @@ page = st.sidebar.radio(
 
 
 # ---------------------------------------------------------------------
-#                             HOME PAGE
+#                               HOME PAGE
 # ---------------------------------------------------------------------
 
 if page == "Home":
 
     st.markdown("""
-        <h1 style='text-align:center; font-size:48px; font-weight:700; color:white;'>
-            Crypto Quant Dashboard
+        <h1 style='text-align:center; color:white; font-size:50px; font-weight:700;'>
+            🚀 Crypto Quant Dashboard
         </h1>
 
-        <h3 style='text-align:center; margin-top:-10px; color:#4CAF50;'>
-            A4 IF — Python • Linux • Git • Quantitative Finance
+        <h3 style='text-align:center; color:#4CAF50; margin-top:-10px;'>
+            Real-time Crypto Analytics • Machine Learning • Quant Finance
         </h3>
 
+        <br>
+
+        <p style='text-align:center; color:#CCCCCC; font-size:18px; max-width:850px; margin:auto;'>
+            Welcome to the Crypto Quant Dashboard — a complete analytics platform 
+            developed for the A4 IF Python/Linux/Git project. 
+            Explore single-asset strategies, build optimized portfolios, analyze correlations, 
+            and access automatically generated daily reports.
+        </p>
+
         <div class="divider"></div>
-
-        <p style='text-align:center; font-size:18px; color:#CCCCCC; 
-                  max-width:900px; margin:auto;'>
-            This dashboard provides advanced cryptocurrency analytics including 
-            single-asset analysis, multi-asset portfolio construction, 
-            performance evaluation, correlation analysis and automated reporting. 
-            It was developed as part of the A4 IF course at ESILV.
-        </p>
-
-        <br><br>
-
-        <h3 style='text-align:center; color:white;'>Team Members</h3>
-
-        <div style='display:flex; justify-content:center; gap:40px; margin-top:20px;'>
-
-            <div class="metric-card" style="width:350px; border-left:6px solid #4CAF50;">
-                <h3 style='color:white; text-align:center;'>Erian STANLEY YOGARAJ</h3>
-                <p style='color:#AAAAAA; text-align:center;'>
-                    Developer — Portfolio Analysis (Quant B)<br>
-                    Multi-asset modeling, risk metrics,<br>
-                    correlations and Linux automation.
-                </p>
-            </div>
-
-            <div class="metric-card" style="width:350px; border-left:6px solid #2196F3;">
-                <h3 style='color:white; text-align:center;'>Ouiam BOUSSAID BENCHAARA</h3>
-                <p style='color:#AAAAAA; text-align:center;'>
-                    Developer — Single Asset Analysis (Quant A)<br>
-                    Technical indicators, BTC analytics,<br>
-                    performance computation and strategies.
-                </p>
-            </div>
-
-        </div>
-
-        <br><br>
-
-        <h3 style='color:white; text-align:center;'>Project Overview</h3>
-
-        <div style='display:flex; justify-content:center; gap:40px; margin-top:20px;'>
-
-            <div class="metric-card" style="width:350px; border-left:6px solid #4CAF50;">
-                <h3 style='color:white;'>Quant A — Single Asset</h3>
-                <p style='color:#AAAAAA;'>
-                    • BTC-USD analysis<br>
-                    • Technical indicators (MAs)<br>
-                    • Volatility & Sharpe ratio<br>
-                    • Performance metrics
-                </p>
-            </div>
-
-            <div class="metric-card" style="width:350px; border-left:6px solid #2196F3;">
-                <h3 style='color:white;'>Quant B — Portfolio</h3>
-                <p style='color:#AAAAAA;'>
-                    • Multi-asset portfolio (BTC, ETH, BNB, SOL)<br>
-                    • Risk & diversification<br>
-                    • Correlation matrix<br>
-                    • Drawdown & Sharpe ratio
-                </p>
-            </div>
-
-        </div>
-
-        <br><br>
-
-        <p style='text-align:center; color:#777777; font-size:15px;'>
-            Developed by Erian & Ouiam — ESILV A4 IF — 2024/2025
-        </p>
-
     """, unsafe_allow_html=True)
+
+    # -----------------------------------------------------------------
+    # 🔍 Quick Overview Cards
+    # -----------------------------------------------------------------
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        metric_card("Quant A", "Single Asset Analysis", color="#2196F3")
+    with col2:
+        metric_card("Quant B", "Portfolio Optimization", color="#4CAF50")
+    with col3:
+        metric_card("Daily Reports", "Auto-generated", color="#E53935")
+
+    st.write("")
+
+    # -----------------------------------------------------------------
+    # 📄 Latest Daily Report Preview
+    # -----------------------------------------------------------------
+
+    st.markdown("<h3 style='color:white;'>📄 Latest Daily Report</h3>", unsafe_allow_html=True)
+
+    import os
+    reports_dir = "/home/obous/quant-crypto-dashboard/reports"
+
+    if os.path.exists(reports_dir):
+        files = sorted(os.listdir(reports_dir))
+        if len(files) > 0:
+            last_report = files[-1]
+            df = pd.read_csv(f"{reports_dir}/{last_report}")
+
+            st.write(f"**Latest file:** `{last_report}`")
+
+            # Download button
+            with open(f"{reports_dir}/{last_report}", "rb") as f:
+                st.download_button(
+                    "⬇️ Download latest report",
+                    data=f,
+                    file_name=last_report,
+                    mime="text/csv"
+                )
+
+            # Preview
+            st.dataframe(df.head(), use_container_width=True)
+        else:
+            st.info("No reports available yet.")
+    else:
+        st.warning("Reports folder not found.")
+
+    st.write("")
+    st.write("")
+
+    # -----------------------------------------------------------------
+    # 👥 Team Section
+    # -----------------------------------------------------------------
+
+    st.markdown("<h3 style='text-align:center; color:white;'>👥 Project Team</h3>", unsafe_allow_html=True)
+
+    colA, colB = st.columns(2)
+
+    with colA:
+        metric_card(
+            "Ouiam BOUSSAID BENCHAARA",
+            "Single Asset Analysis (Quant A)",
+            color="#2196F3"
+        )
+
+    with colB:
+        metric_card(
+            "Erian STANLEY YOGARAJ",
+            "Portfolio Optimization (Quant B)",
+            color="#4CAF50"
+        )
+
+    st.write("")
+    st.markdown("<p style='text-align:center; color:#777; font-size:15px;'>ESILV A4 IF — 2024/2025</p>", unsafe_allow_html=True)
+
 
 
 # ---------------------------------------------------------------------
@@ -445,6 +458,29 @@ elif page == "Single Asset (Ouiam)":
     # (Optionnel) afficher les dernières lignes de la stratégie
     with st.expander("Show last signals / data"):
         st.dataframe(df.tail(10))
+
+    
+    # --- Prediction Model (BONUS) ---
+    n_days_future = 14
+    model = LinearRegression()
+
+    X = np.arange(len(df)).reshape(-1,1)
+    y = df["price"].values
+
+    model.fit(X, y)
+
+    future_X = np.arange(len(df), len(df)+n_days_future).reshape(-1,1)
+    preds = model.predict(future_X)
+
+    df.index = df.index.date
+    st.subheader("14-day Price Prediction")
+    st.line_chart(
+        {
+            "Historical price": df["price"],
+            "Predicted price": pd.Series(preds, index=pd.RangeIndex(start=len(df), stop=len(df)+n_days_future)),
+        }
+    )
+
 
 
 
