@@ -2,13 +2,27 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from data_fetch import get_price_history, get_multi_price_history
+from statsmodels.tsa.arima.model import ARIMA
+from scipy.optimize import minimize
 import time
 from sklearn.linear_model import LinearRegression
 
 # ---------------------------------------------------------------------
 #                      STYLING (LEVEL 3 - MAX)
 # ---------------------------------------------------------------------
+# -----------------------------------------------------------
+# Utility function : compute full drawdown series
+# -----------------------------------------------------------
 
+def compute_drawdown_series(series):
+    """
+    Computes the drawdown series from a portfolio value time series.
+    Drawdown = (value / rolling max) - 1
+    """
+    rolling_max = series.cummax()
+    drawdown = (series / rolling_max) - 1
+    return drawdown
+    
 st.set_page_config(page_title="Crypto Quant Dashboard", layout="wide")
 # Auto-refresh every 5 minutes (300 sec)
 st.markdown("""
@@ -233,7 +247,7 @@ if page == "Home":
 # ---------------------------------------------------------------------
 
 elif page == "Daily Reports (Auto)":
-    st.subheader("📄 Daily Automated Reports")
+    st.subheader(" Daily Automated Reports")
 
     import os
 
@@ -264,7 +278,7 @@ elif page == "Daily Reports (Auto)":
 
     # Show last report
     last_report = files[-1]
-    st.write("### 📊 Latest Report")
+    st.write("###  Latest Report")
     st.write(f"**File:** {last_report}")
 
     df = pd.read_csv(f"{reports_dir}/{last_report}")
@@ -483,63 +497,120 @@ elif page == "Single Asset (Ouiam)":
 
 
 
-
-
 # ---------------------------------------------------------------------
-#                       PORTFOLIO (ERIAN)
+#                  PORTFOLIO (ERIAN) — FULL QUANT VERSION
 # ---------------------------------------------------------------------
 
 elif page == "Portfolio (Erian)":
-    st.subheader("Multi-Asset Crypto Portfolio")
 
+    st.header(" Multi-Asset Crypto Portfolio Analysis")
+
+    # ---------------------------------------------------------
+    # Select assets + time window
+    # ---------------------------------------------------------
     all_tickers = ["BTC-USD", "ETH-USD", "BNB-USD", "SOL-USD"]
     tickers = st.multiselect("Select crypto assets:", all_tickers, default=all_tickers)
 
     days = st.slider("Time window (days):", 30, 365, 180, step=10)
 
+    # Rebalancing option
+    rebal_freq = st.selectbox(
+        "Rebalancing frequency:",
+        ["None", "Weekly", "Monthly"]
+    )
+
+    # Volatility targeting option
+    vol_target = st.checkbox("Enable volatility targeting (Risk-based weights)")
+
+    # Risk parity option
+    risk_parity = st.checkbox("Enable Risk-Parity weights")
+
     if len(tickers) == 0:
         st.warning("Please select at least one asset.")
+
     else:
+        # ---------------------------------------------------------
+        # Load price data
+        # ---------------------------------------------------------
         prices = get_multi_price_history(tickers, days=days)
-
-        st.subheader("Daily close prices")
-        st.line_chart(prices)
-
         returns = prices.pct_change().dropna()
 
-        # ---- CUSTOM WEIGHTS ----
-        st.subheader("Portfolio weights")
+        st.subheader(" Daily Close Prices")
+        st.line_chart(prices)
 
-        weights_input = {}
-        for t in tickers:
-            weights_input[t] = st.number_input(
-                f"Weight for {t} (%)",
-                min_value=0.0, max_value=100.0,
-                value=100.0 / len(tickers), step=1.0
-            )
+        # ---------------------------------------------------------
+        # Portfolio Weights
+        # ---------------------------------------------------------
+        st.subheader("🎚 Portfolio Weights")
 
-        weights = np.array(list(weights_input.values()))
-        weights = weights / weights.sum()
+        if risk_parity:
+            vols = returns.std()
+            inv_vol = 1 / vols
+            weights = inv_vol / inv_vol.sum()
+            st.info("Weights computed using **risk parity (inverse volatility)**.")
 
-        st.write("Normalized weights:", {t: f"{w:.1%}" for t, w in zip(tickers, weights)})
+        elif vol_target:
+            vols = returns.std()
+            inv_vol = 1 / vols
+            weights = inv_vol / inv_vol.sum()
+            st.info("Weights computed automatically based on **inverse volatility**.")
 
+        else:
+            # Manual weights
+            st.write("Custom weights (%):")
+            weights_input = {
+                t: st.number_input(
+                    f"Weight for {t} (%)",
+                    min_value=0.0, max_value=100.0,
+                    value=100.0 / len(tickers), step=1.0
+                )
+                for t in tickers
+            }
+            weights = np.array(list(weights_input.values()))
+            weights = weights / weights.sum()
+
+        st.write("**Normalized weights:**")
+        st.json({t: f"{w:.1%}" for t, w in zip(tickers, weights)})
+
+        # ---------------------------------------------------------
+        # Compute portfolio returns
+        # ---------------------------------------------------------
         portfolio_returns = (returns * weights).sum(axis=1)
+
+        # Rebalancing
+        if rebal_freq == "Weekly":
+            portfolio_returns = portfolio_returns.resample("W").mean().reindex(portfolio_returns.index, method="pad")
+        elif rebal_freq == "Monthly":
+            portfolio_returns = portfolio_returns.resample("M").mean().reindex(portfolio_returns.index, method="pad")
+
         portfolio_value = (1 + portfolio_returns).cumprod()
 
-        st.subheader("Portfolio value (base = 1.0)")
+        # ---------------------------------------------------------
+        # Portfolio Value Chart
+        # ---------------------------------------------------------
+        st.subheader(" Portfolio Value (base = 1.0)")
         st.line_chart(portfolio_value)
 
-        # ---- METRICS ----
-        st.subheader("Portfolio performance metrics")
+        # ---------------------------------------------------------
+        # Performance Metrics
+        # ---------------------------------------------------------
+        st.subheader(" Portfolio Performance Metrics")
 
-        trading_days_per_year = 252
+        trading_days = 252
         avg_daily_ret = portfolio_returns.mean()
         daily_vol = portfolio_returns.std()
-
-        ann_return = (1 + avg_daily_ret) ** trading_days_per_year - 1
-        ann_vol = daily_vol * np.sqrt(trading_days_per_year)
+        ann_return = (1 + avg_daily_ret) ** trading_days - 1
+        ann_vol = daily_vol * np.sqrt(trading_days)
         sharpe = ann_return / ann_vol if ann_vol > 0 else np.nan
+
+        # Downside risk (Sortino)
+        neg_returns = portfolio_returns[portfolio_returns < 0]
+        downside_std = neg_returns.std() if len(neg_returns) > 0 else np.nan
+        sortino = ann_return / (downside_std * np.sqrt(252)) if downside_std > 0 else np.nan
+
         mdd = max_drawdown(portfolio_value)
+        skew = returns.skew().mean()
+        kurt = returns.kurt().mean()
 
         col1, col2 = st.columns(2)
 
@@ -551,10 +622,16 @@ elif page == "Portfolio (Erian)":
         with col2:
             metric_card("Annualized volatility", f"{ann_vol:.2%}")
             metric_card("Sharpe ratio", f"{sharpe:.2f}", "#FF9800")
+            metric_card("Sortino ratio", f"{sortino:.2f}")
             metric_card("Max drawdown", f"{mdd:.2%}", "#E53935")
 
-        # ---- COMPARISON ----
-        st.subheader("Comparison: Portfolio vs BTC")
+        metric_card("Skewness", f"{skew:.2f}")
+        metric_card("Kurtosis", f"{kurt:.2f}")
+
+        # ---------------------------------------------------------
+        # Comparison vs BTC
+        # ---------------------------------------------------------
+        st.subheader(" Comparison: Portfolio vs BTC")
 
         if "BTC-USD" in prices.columns:
             btc_norm = prices["BTC-USD"] / prices["BTC-USD"].iloc[0]
@@ -563,10 +640,77 @@ elif page == "Portfolio (Erian)":
         else:
             st.info("BTC-USD not selected → comparison unavailable.")
 
-        # ---- CORRELATION ----
-        st.subheader("Correlation matrix")
+        # ---------------------------------------------------------
+        # Correlation Matrix
+        # ---------------------------------------------------------
+        st.subheader(" Correlation Matrix")
         st.dataframe(
-            returns.corr()
-            .style.background_gradient(cmap="coolwarm")
-            .format("{:.2f}")
+            returns.corr().style.background_gradient(cmap="coolwarm").format("{:.2f}")
+        )
+
+        # ---------------------------------------------------------
+        # Drawdown Chart
+        # ---------------------------------------------------------
+        st.subheader(" Drawdown Analysis")
+        dd = compute_drawdown_series(portfolio_value)
+        st.line_chart(dd)
+
+        # ---------------------------------------------------------
+        # Markowitz Optimization
+        # ---------------------------------------------------------
+        st.subheader(" Markowitz Portfolio Optimization")
+
+        def markowitz_opt(returns):
+            mean = returns.mean()
+            cov = returns.cov()
+            n = len(mean)
+
+            def portfolio_vol(w):
+                return np.sqrt(w.T @ cov @ w)
+
+            cons = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1}
+            bounds = [(0, 1) for _ in range(n)]
+
+            w0 = np.ones(n) / n
+
+            res = minimize(portfolio_vol, w0, bounds=bounds, constraints=cons)
+            return res.x
+
+        opt_weights = markowitz_opt(returns)
+        st.write("Optimal minimum-variance weights:")
+        st.json({t: f"{w:.1%}" for t, w in zip(tickers, opt_weights)})
+
+        # ---------------------------------------------------------
+        # ARIMA Forecast
+        # ---------------------------------------------------------
+        st.subheader(" Forecast using ARIMA")
+
+        ts = portfolio_value.copy()
+        ts.index = pd.to_datetime(ts.index)
+        ts = ts.asfreq("D").ffill()
+
+        try:
+            model = ARIMA(ts, order=(1,1,1))
+            fitted = model.fit()
+            forecast = fitted.forecast(steps=7)
+
+            forecast_df = pd.DataFrame({
+                "date": pd.date_range(ts.index[-1], periods=8, freq="D")[1:],
+                "forecast": forecast
+            }).set_index("date")
+
+            st.line_chart(forecast_df)
+            st.success("ARIMA forecast generated successfully.")
+
+        except Exception as e:
+            st.error(f"ARIMA failed: {e}")
+
+        # ---------------------------------------------------------
+        # Download CSV
+        # ---------------------------------------------------------
+        st.download_button(
+            "Download portfolio data (CSV)",
+            prices.to_csv().encode(),
+            "portfolio_data.csv",
+            "text/csv"
         )
