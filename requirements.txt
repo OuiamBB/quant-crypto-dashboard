@@ -1,5 +1,9 @@
-streamlit
 pandas
 numpy
+streamlit
 yfinance
+statsmodels
+scikit-learn
 matplotlib
+seaborn
+scipy
