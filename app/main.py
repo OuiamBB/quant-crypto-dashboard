@@ -35,14 +35,25 @@ st.markdown("""
 st.markdown("""
     <style>
 
-    /* GLOBAL BACKGROUND */
-    body {
-        background-color: #0E1117;
+    /* MAIN BACKGROUND */
+    [data-testid="stAppViewContainer"] {
+        background-color: #000000 !important;
     }
+
+    /* MAIN CONTENT BACKGROUND */
+    [data-testid="stAppViewContainer"] > .main {
+        background-color: #000000 !important;
+    }
+
+    /* SIDEBAR BACKGROUND */
+    [data-testid="stSidebar"] {
+        background-color: #000000 !important;
+    }
+
 
     /* SIDEBAR */
     [data-testid="stSidebar"] {
-        background-color: #11141c;
+        background-color: #000000;
         padding-top: 40px;
     }
 
@@ -95,6 +106,70 @@ st.markdown("""
         margin-top: -5px;
     }
 
+    /* --------------------------------------------- */
+    /* SIDEBAR NAVIGATION BUTTONS (BLACK & WHITE)    */
+    /* --------------------------------------------- */
+
+    .sidebar-button {
+        display: block;
+        width: 100%;
+        padding: 10px 15px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+
+        background-color: #000000 !important;   /* BLACK BUTTON */
+        color: #FFFFFF !important;              /* WHITE TEXT */
+        text-align: left;
+        font-weight: 600;
+        border: 1px solid #333333;
+
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Hover effect */
+    .sidebar-button:hover {
+        background-color: #1a1a1a !important;  /* Slightly lighter black */
+        border-color: #D9A94C !important;      /* GOLD BORDER on hover */
+    }
+
+    /* Active button */
+    .sidebar-button-active {
+        background-color: #1f1f1f !important;
+        border-left: 4px solid #D9A94C !important;  /* GOLD indicator */
+        color: #FFFFFF !important;
+    }
+
+    .button-nav {
+        background-color: #000000;
+        color: black;
+        padding: 12px 18px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 2px solid #a77f2c;
+        transition: 0.2s;
+    }
+
+    .button-nav:hover {
+        background-color: #e8c879;
+        color: black;
+        transform: translateX(5px);
+    }
+
+    .button-nav-active {
+        background-color: #a77f2c;
+        color: black;
+        border: 2px solid #000000;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -124,18 +199,11 @@ def max_drawdown(series):
 # ---------------------------------------------------------------------
 
 
-
-
-# ---------------------------------------------------------------------
-#                             SIDEBAR
-# ---------------------------------------------------------------------
-
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Go to:",
     ["Home", "Single Asset (Ouiam)", "Portfolio (Erian)", "Daily Reports (Auto)"]
 )
-
 
 # ---------------------------------------------------------------------
 #                               HOME PAGE
@@ -541,7 +609,7 @@ elif page == "Portfolio (Erian)":
         # ---------------------------------------------------------
         # Portfolio Weights
         # ---------------------------------------------------------
-        st.subheader("🎚 Portfolio Weights")
+        st.subheader("Portfolio Weights")
 
         if risk_parity:
             vols = returns.std()
