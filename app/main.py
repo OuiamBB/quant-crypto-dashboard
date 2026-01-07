@@ -7,12 +7,6 @@ from scipy.optimize import minimize
 import time
 from sklearn.linear_model import LinearRegression
 
-# ---------------------------------------------------------------------
-#                      STYLING (LEVEL 3 - MAX)
-# ---------------------------------------------------------------------
-# -----------------------------------------------------------
-# Utility function : compute full drawdown series
-# -----------------------------------------------------------
 
 def compute_drawdown_series(series):
     """
@@ -24,7 +18,6 @@ def compute_drawdown_series(series):
     return drawdown
     
 st.set_page_config(page_title="Crypto Quant Dashboard", layout="wide")
-# Auto-refresh every 5 minutes (300 sec)
 st.markdown("""
     <meta http-equiv="refresh" content="300">
 """, unsafe_allow_html=True)
@@ -193,27 +186,14 @@ def max_drawdown(series):
     drawdown = (series - cummax) / cummax
     return drawdown.min()
 
-
-# ---------------------------------------------------------------------
-#                             HEADER
-# ---------------------------------------------------------------------
-
-
+# Navigation
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Go to:",
     ["Home", "Single Asset (Ouiam)", "Portfolio (Erian)", "Daily Reports (Auto)"]
 )
 
-# ---------------------------------------------------------------------
-#                               HOME PAGE
-# ---------------------------------------------------------------------
-
 if page == "Home":
-
-# -----------------------------------------------------------------
-# HERO
-# -----------------------------------------------------------------
 
     st.markdown(
         "<h1 style='text-align:center; color:white; font-size:48px; font-weight:700;'>"
@@ -233,10 +213,6 @@ if page == "Home":
 
     st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-
-    # -----------------------------
-    # QUICK NAV CARDS 
-    # -----------------------------
     st.markdown("<h3 style='color:white; margin-top:10px;'>Quick Access</h3>", unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
@@ -255,9 +231,6 @@ if page == "Home":
 
     st.write("")
 
-    # -----------------------------
-    # LATEST REPORT
-    # -----------------------------
     st.markdown("<h3 style='color:white;'>Latest Daily Report</h3>", unsafe_allow_html=True)
 
     import os
@@ -284,7 +257,6 @@ if page == "Home":
                         use_container_width=True
                     )
 
-            # Clean preview (avoid big table)
             preview = df.copy()
             preview = preview.drop(columns=["Unnamed: 0"], errors="ignore")
             st.dataframe(preview, use_container_width=True, height=220)
@@ -296,9 +268,6 @@ if page == "Home":
 
     st.write("")
 
-    # -----------------------------
-    # TEAM 
-    # -----------------------------
     st.markdown("<h3 style='text-align:center; color:white; margin-top:20px;'>Project Team</h3>", unsafe_allow_html=True)
 
     t1, t2 = st.columns(2)
@@ -311,11 +280,7 @@ if page == "Home":
 
     st.markdown("<p style='text-align:center; color:#777; font-size:14px; margin-top:10px;'>ESILV A4 IF — 2024/2025</p>", unsafe_allow_html=True)
 
-
-
-# ---------------------------------------------------------------------
-#                       SINGLE ASSET (OUIAM)
-# ---------------------------------------------------------------------
+# Single Asset (Ouiam)
 
 elif page == "Single Asset (Ouiam)":
     st.subheader("Single Asset Crypto Analysis")
@@ -338,7 +303,6 @@ elif page == "Single Asset (Ouiam)":
 
     st.write(" ")
 
-    # --- Extra parameters depending on strategy ---
     sma_short = sma_long = None
     rsi_window = rsi_buy = rsi_sell = None
 
@@ -376,7 +340,6 @@ elif page == "Single Asset (Ouiam)":
             value=70,
         )
 
-    # --- Load data ---
     prices = get_price_history(asset, days=days)
 
     if prices.empty:
@@ -385,32 +348,23 @@ elif page == "Single Asset (Ouiam)":
 
     prices["returns"] = prices["price"].pct_change()
 
-    # ------------------------------
-    # Strategy Implementations
-    # ------------------------------
-
     df = prices.copy()
-
-    # BUY & HOLD baseline
     bh_curve = (1 + df["returns"].fillna(0)).cumprod()
-    strat_curve = bh_curve.copy()  # default
+    strat_curve = bh_curve.copy()  
 
-    indicator_df = None  # for SMA/RSI visualisation
-
-    # SMA CROSSOVER
+    indicator_df = None  
     if strategy == "SMA Crossover":
         df["SMA_short"] = df["price"].rolling(sma_short).mean()
         df["SMA_long"] = df["price"].rolling(sma_long).mean()
 
         df["signal"] = (df["SMA_short"] > df["SMA_long"]).astype(int)
-        df["position"] = df["signal"].shift(1).fillna(0)  # trade next day
+        df["position"] = df["signal"].shift(1).fillna(0)  
 
         df["strategy_returns"] = df["position"] * df["returns"]
         strat_curve = (1 + df["strategy_returns"].fillna(0)).cumprod()
 
         indicator_df = df[["price", "SMA_short", "SMA_long"]]
 
-    # RSI STRATEGY
     elif strategy == "RSI Strategy":
         delta = df["price"].diff()
         gain = delta.clip(lower=0)
@@ -432,9 +386,6 @@ elif page == "Single Asset (Ouiam)":
 
         indicator_df = df[["RSI"]]
 
-    # ------------------------------
-    # Max Drawdown Function
-    # ------------------------------
     def max_drawdown(series):
         rolling_max = series.cummax()
         drawdown = (series - rolling_max) / rolling_max
@@ -442,9 +393,6 @@ elif page == "Single Asset (Ouiam)":
 
     mdd = max_drawdown(strat_curve)
 
-    # ------------------------------
-    # MAIN CHART: Price vs Strategy
-    # ------------------------------
     st.subheader(f"Price vs Strategy — {asset}")
     st.line_chart(
         {
@@ -453,9 +401,6 @@ elif page == "Single Asset (Ouiam)":
         }
     )
 
-    # ------------------------------
-    # INDICATOR CHARTS (SMA / RSI)
-    # ------------------------------
     if strategy == "SMA Crossover" and indicator_df is not None:
         st.subheader("Moving Averages (SMA)")
         st.line_chart(
@@ -474,14 +419,10 @@ elif page == "Single Asset (Ouiam)":
             f"RSI Strategy: BUY when RSI < {rsi_buy}, SELL when RSI > {rsi_sell}."
         )
 
-    # ------------------------------
-    # Performance Metrics (cards)
-    # ------------------------------
     st.subheader("Performance Metrics")
 
     trading_days = 252
 
-    # Choose correct returns depending on strategy
     if strategy == "Buy & Hold":
         used_returns = df["returns"]
     else:
@@ -504,12 +445,10 @@ elif page == "Single Asset (Ouiam)":
         metric_card("Sharpe Ratio", f"{sharpe:.2f}", color="#FF9800")
         metric_card("Max Drawdown", f"{mdd:.2%}", color="#E53935")
 
-    # (Optionnel) afficher les dernières lignes de la stratégie
     with st.expander("Show last signals / data"):
         st.dataframe(df.tail(10))
 
     
-    # --- Prediction Model (BONUS) ---
     n_days_future = 14
     model = LinearRegression()
 
@@ -531,51 +470,36 @@ elif page == "Single Asset (Ouiam)":
     )
 
 
-
-# ---------------------------------------------------------------------
-#                  PORTFOLIO (ERIAN) 
-# ---------------------------------------------------------------------
+# Portfolio (Erian)
 
 elif page == "Portfolio (Erian)":
 
     st.header(" Multi-Asset Crypto Portfolio Analysis")
 
-    # ---------------------------------------------------------
-    # Select assets + time window
-    # ---------------------------------------------------------
     all_tickers = ["BTC-USD", "ETH-USD", "BNB-USD", "SOL-USD"]
     tickers = st.multiselect("Select crypto assets:", all_tickers, default=all_tickers)
 
     days = st.slider("Time window (days):", 30, 365, 180, step=10)
 
-    # Rebalancing option
     rebal_freq = st.selectbox(
         "Rebalancing frequency:",
         ["None", "Weekly", "Monthly"]
     )
 
-    # Volatility targeting option
     vol_target = st.checkbox("Enable volatility targeting (Risk-based weights)")
 
-    # Risk parity option
     risk_parity = st.checkbox("Enable Risk-Parity weights")
 
     if len(tickers) == 0:
         st.warning("Please select at least one asset.")
 
     else:
-        # ---------------------------------------------------------
-        # Load price data
-        # ---------------------------------------------------------
         prices = get_multi_price_history(tickers, days=days)
         returns = prices.pct_change().dropna()
 
         st.subheader(" Daily Close Prices")
         st.line_chart(prices)
 
-        # ---------------------------------------------------------
-        # Portfolio Weights
-        # ---------------------------------------------------------
         st.subheader("Portfolio Weights")
 
         if risk_parity:
@@ -591,7 +515,6 @@ elif page == "Portfolio (Erian)":
             st.info("Weights computed automatically based on **inverse volatility**.")
 
         else:
-            # Manual weights
             st.write("Custom weights (%):")
             weights_input = {
                 t: st.number_input(
@@ -607,12 +530,8 @@ elif page == "Portfolio (Erian)":
         st.write("**Normalized weights:**")
         st.json({t: f"{w:.1%}" for t, w in zip(tickers, weights)})
 
-        # ---------------------------------------------------------
-        # Compute portfolio returns
-        # ---------------------------------------------------------
         portfolio_returns = (returns * weights).sum(axis=1)
 
-        # Rebalancing
         if rebal_freq == "Weekly":
             portfolio_returns = portfolio_returns.resample("W").mean().reindex(portfolio_returns.index, method="pad")
         elif rebal_freq == "Monthly":
@@ -620,15 +539,9 @@ elif page == "Portfolio (Erian)":
 
         portfolio_value = (1 + portfolio_returns).cumprod()
 
-        # ---------------------------------------------------------
-        # Portfolio Value Chart
-        # ---------------------------------------------------------
         st.subheader(" Portfolio Value (base = 1.0)")
         st.line_chart(portfolio_value)
 
-        # ---------------------------------------------------------
-        # Performance Metrics
-        # ---------------------------------------------------------
         st.subheader(" Portfolio Performance Metrics")
 
         trading_days = 252
@@ -638,7 +551,6 @@ elif page == "Portfolio (Erian)":
         ann_vol = daily_vol * np.sqrt(trading_days)
         sharpe = ann_return / ann_vol if ann_vol > 0 else np.nan
 
-        # Downside risk (Sortino)
         neg_returns = portfolio_returns[portfolio_returns < 0]
         downside_std = neg_returns.std() if len(neg_returns) > 0 else np.nan
         sortino = ann_return / (downside_std * np.sqrt(252)) if downside_std > 0 else np.nan
@@ -663,9 +575,6 @@ elif page == "Portfolio (Erian)":
         metric_card("Skewness", f"{skew:.2f}")
         metric_card("Kurtosis", f"{kurt:.2f}")
 
-        # ---------------------------------------------------------
-        # Comparison vs BTC
-        # ---------------------------------------------------------
         st.subheader(" Comparison: Portfolio vs BTC")
 
         if "BTC-USD" in prices.columns:
@@ -675,24 +584,15 @@ elif page == "Portfolio (Erian)":
         else:
             st.info("BTC-USD not selected → comparison unavailable.")
 
-        # ---------------------------------------------------------
-        # Correlation Matrix
-        # ---------------------------------------------------------
         st.subheader(" Correlation Matrix")
         st.dataframe(
             returns.corr().style.background_gradient(cmap="coolwarm").format("{:.2f}")
         )
 
-        # ---------------------------------------------------------
-        # Drawdown Chart
-        # ---------------------------------------------------------
         st.subheader(" Drawdown Analysis")
         dd = compute_drawdown_series(portfolio_value)
         st.line_chart(dd)
 
-        # ---------------------------------------------------------
-        # Markowitz Optimization
-        # ---------------------------------------------------------
         st.subheader(" Markowitz Portfolio Optimization")
 
         def markowitz_opt(returns):
@@ -715,9 +615,6 @@ elif page == "Portfolio (Erian)":
         st.write("Optimal minimum-variance weights:")
         st.json({t: f"{w:.1%}" for t, w in zip(tickers, opt_weights)})
 
-        # ---------------------------------------------------------
-        # ARIMA Forecast
-        # ---------------------------------------------------------
         st.subheader(" Forecast using ARIMA")
 
         ts = portfolio_value.copy()
@@ -740,9 +637,6 @@ elif page == "Portfolio (Erian)":
         except Exception as e:
             st.error(f"ARIMA failed: {e}")
 
-        # ---------------------------------------------------------
-        # Download CSV
-        # ---------------------------------------------------------
         st.download_button(
             "Download portfolio data (CSV)",
             prices.to_csv().encode(),
@@ -750,9 +644,7 @@ elif page == "Portfolio (Erian)":
             "text/csv"
         )
 
-# ---------------------------------------------------------------------
-#                       DAILY REPORTS 
-# ---------------------------------------------------------------------
+# Daily Reports 
 
 elif page == "Daily Reports (Auto)":
     st.subheader(" Daily Automated Reports")
@@ -772,7 +664,6 @@ elif page == "Daily Reports (Auto)":
         st.info("No reports have been generated yet.")
         st.stop()
 
-    # List reports
     st.write("### Available Reports:")
     for f in files:
         file_path = f"{reports_dir}/{f}"
@@ -785,7 +676,6 @@ elif page == "Daily Reports (Auto)":
                 mime="text/csv"
             )
 
-    # Show last report
     last_report = files[-1]
     st.write("###  Latest Report")
     st.write(f"**File:** {last_report}")
