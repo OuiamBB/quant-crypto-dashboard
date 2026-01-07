@@ -758,8 +758,9 @@ elif page == "Daily Reports (Auto)":
     st.subheader(" Daily Automated Reports")
 
     import os
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    reports_dir = os.path.join(BASE_DIR, "reports")
 
-    reports_dir = "/home/obous/quant-crypto-dashboard/reports"
 
     if not os.path.exists(reports_dir):
         st.warning("No reports directory found.")
