@@ -261,7 +261,9 @@ if page == "Home":
     st.markdown("<h3 style='color:white;'>Latest Daily Report</h3>", unsafe_allow_html=True)
 
     import os
-    reports_dir = "/home/obous/quant-crypto-dashboard/reports"
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # .../quant-crypto-dashboard
+    reports_dir = os.path.join(BASE_DIR, "reports")
+
 
     if os.path.exists(reports_dir):
         files = sorted([f for f in os.listdir(reports_dir) if f.endswith(".csv")])
